@@ -43,6 +43,7 @@
 #include "stm32l4xx_hal.h"
 #include "main.h"
 #include "../Src/PID/PID.h"
+#include "../Src/MA702/MA702.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -63,7 +64,7 @@ void DMA1_Channel1_IRQHandler(void);
 void DMA1_Channel2_IRQHandler(void);
 void DMA1_Channel3_IRQHandler(void);
 void TIM7_IRQHandler(void);
-void sharingIsCaring(SPI_HandleTypeDef *_hspi, PID *_pos, PID *_vel, PID *_Torque, uint16_t *_devID);
+void sharingIsCaring(SPI_HandleTypeDef *_hspi, PID *_pos, PID *_vel, PID *_Torque, uint16_t *_devID, MA702 *_enc, ADC_HandleTypeDef *_ADC);
 
 #ifdef __cplusplus
 }

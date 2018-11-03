@@ -1243,11 +1243,11 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive(SPI_HandleTypeDef *hspi, uint16_t *pTx
     goto error;
   }
 
-  if ((pTxData == NULL) || (pRxData == NULL) || (Size == 0U))
-  {
-    errorcode = HAL_ERROR;
-    goto error;
-  }
+//  if ((pTxData == NULL) || (pRxData == NULL) || (Size == 0U))
+//  {
+//    errorcode = HAL_ERROR;
+//    goto error;
+//  }
 
   /* Don't overwrite in case of HAL_SPI_STATE_BUSY_RX */
   if (hspi->State != HAL_SPI_STATE_BUSY_RX)

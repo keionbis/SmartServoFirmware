@@ -64,14 +64,21 @@
 #define MOSI_GPIO_Port GPIOA
 #define FB_Pin GPIO_PIN_0
 #define FB_GPIO_Port GPIOB
+#define D2_Pin GPIO_PIN_10
+#define D2_GPIO_Port GPIOA
 #define motor2_Pin GPIO_PIN_11
 #define motor2_GPIO_Port GPIOA
-#define D2_Pin GPIO_PIN_12
-#define D2_GPIO_Port GPIOA
+#define D1_Pin GPIO_PIN_12
+#define D1_GPIO_Port GPIOA
 #define Motor1_Pin GPIO_PIN_15
 #define Motor1_GPIO_Port GPIOA
-#define D1_Pin GPIO_PIN_3
-#define D1_GPIO_Port GPIOB
+#define CommsSCK_Pin GPIO_PIN_3
+#define CommsSCK_GPIO_Port GPIOB
+#define CommsMISO_Pin GPIO_PIN_4
+#define CommsMISO_GPIO_Port GPIOB
+#define CommsMOSI_Pin GPIO_PIN_5
+#define CommsMOSI_GPIO_Port GPIOB
+
 
 /* ########################## Assert Selection ############################## */
 /**
@@ -89,6 +96,9 @@
 #endif
 void _Error_Handler(char *, int);
 void runControllers();
+extern int controller;
+
+
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 #ifdef __cplusplus
 }

@@ -52,13 +52,10 @@ signed long long MA702::readAngleRaw(){
 	uint16_t angle;
 	uint8_t parity;
 	uint8_t highStateCount = 0;
-
-	GPIOA -> ODR &= ~GPIO_PIN_1;
-	__disable_irq();
+	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 	HAL_SPI_TransmitReceive(hspi, 0x00, &angle, 1, 0x10);
 	while (SPI1->SR & SPI_SR_BSY);
-	__enable_irq();
-	GPIOA -> ODR |= GPIO_PIN_1;
+	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
 	angle = angle>>4;
 	parity = angle>>8;
 
@@ -92,7 +89,6 @@ signed long long MA702::readAngleRaw(){
 	else if(_last_angle<boundForWrap && angle>=maxForWrap)
 		rotations-=1;
 	_last_angle=angle;
-	_last_ticks = HAL_GetTick();
 	return angle;
 }
 long int MA702::totalAngle(){
@@ -130,13 +126,14 @@ double MA702::convertRawAngleToDegree(uint8_t rawAngleDataBitLength, uint16_t ra
 }
 double MA702::getVelocity(){
 	totalAngle();
-	uint32_t prevticks = _last_ticks;
+	uint32_t prevticks = HAL_GetTick();
 	int prevAngle = _last_angle;
+	int angle = totalAngle();
 	uint32_t currticks = HAL_GetTick();
 	if(prevticks>currticks){
 		currticks = currticks+(80000000-prevticks);
 	}
 	double time = (currticks-prevticks)/80000000;
-	return (prevAngle-totalAngle())/(time);
+	return (prevAngle-angle)/(time);
 }
 

@@ -35,8 +35,9 @@ Src/stm32l4xx_it.o: ../Src/stm32l4xx_it.cpp \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  /home/kbisland/idek2/Inc/stm32l4xx_it.h \
- /home/kbisland/idek2/Inc/../Src/PID/PID.h ../Src/PID/PID.h \
- /home/kbisland/idek2/Inc/main.h ../Src/eeprom.h
+ /home/kbisland/idek2/Inc/../Src/PID/PID.h \
+ /home/kbisland/idek2/Inc/../Src/MA702/MA702.h ../Src/PID/PID.h \
+ /home/kbisland/idek2/Inc/main.h ../Src/eeprom.h ../Src/MA702/MA702.h
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 
@@ -112,8 +113,12 @@ Src/stm32l4xx_it.o: ../Src/stm32l4xx_it.cpp \
 
 /home/kbisland/idek2/Inc/../Src/PID/PID.h:
 
+/home/kbisland/idek2/Inc/../Src/MA702/MA702.h:
+
 ../Src/PID/PID.h:
 
 /home/kbisland/idek2/Inc/main.h:
 
 ../Src/eeprom.h:
+
+../Src/MA702/MA702.h:
