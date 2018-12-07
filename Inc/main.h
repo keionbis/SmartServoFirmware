@@ -53,9 +53,6 @@
 #define LED_GPIO_Port GPIOA
 #define ENC_CS_Pin GPIO_PIN_1
 #define ENC_CS_GPIO_Port GPIOA
-#define Comms_CS_Pin GPIO_PIN_4
-#define Comms_CS_GPIO_Port GPIOA
-#define Comms_CS_EXTI_IRQn EXTI4_IRQn
 #define SCK_Pin GPIO_PIN_5
 #define SCK_GPIO_Port GPIOA
 #define MISO_Pin GPIO_PIN_6
@@ -79,7 +76,6 @@
 #define CommsMOSI_Pin GPIO_PIN_5
 #define CommsMOSI_GPIO_Port GPIOB
 
-
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
@@ -96,9 +92,7 @@
 #endif
 void _Error_Handler(char *, int);
 void runControllers();
-extern int controller;
-
-
+void initDMA();
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 #ifdef __cplusplus
 }

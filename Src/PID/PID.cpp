@@ -330,4 +330,6 @@ float PID::getDParam() {
 float PID::getVel(){
 	return Velocity;
 }
-
+float PID::getSetpoint(){
+	return setPoint_;
+}

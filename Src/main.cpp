@@ -11,8 +11,9 @@ extern "C"
 {
 #endif
 #define Bias 0.05
-#define count 50
+#define count 2800
 #define PWM_Period 800
+
 
 uint16_t VirtAddVarTab[NB_OF_VAR] = {0x5555, 0x6666, 0x7777, 0x8888, 0x9999, 0xAAAA, 0xBBBB, 0xCCCC, 0xDDDD, 0xEEEE};
 uint16_t VarDataTab[NB_OF_VAR] = {0, 0, 0};
@@ -23,6 +24,8 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
 DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi1_tx;
+DMA_HandleTypeDef hdma_spi3_rx;
+DMA_HandleTypeDef hdma_spi3_tx;
 DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -32,8 +35,9 @@ PID Velocity(1, 0, 0, 0.0025);
 PID Torque(1, 0, 0, 0.0025);
 MA702 encoder;
 float Pkp = 1, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
-uint16_t  devID = 0;
+uint16_t  devID = 1;
 uint32_t Data = 0;
+ extern uint16_t _RxData[5];
 
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -50,32 +54,38 @@ static void MX_DMA_Init(void);
 static void MX_NVIC_Init();
 void ReadEEPROM();
 int PCLK1_Freq = HAL_RCC_GetPCLK2Freq();
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 float Output;
-
-
+uint16_t _TXData[5] = {1,2,3,4,5};
+uint8_t wTransferState = 0;
 int main(void)
+
 {
 
 	HAL_Init();
 	SystemClock_Config();
 	GPIO_Init();
+	MX_DMA_Init();
 	TIM2_Init();
 	TIM1_Init();
-	TIM7_Init();
 	SPI1_Init();
-	SPI3_Init();
 	ADC1_Init();
-	MX_DMA_Init();
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_Base_Start(&htim1);
+	TIM7_Init();
+	SPI3_Init();
+
+	/* Initialize interrupts */
 	MX_NVIC_Init();
 	HAL_FLASH_Unlock();
 	EE_Init();
 	ReadEEPROM();
 	Init_Controllers();
+	HAL_TIM_Base_Start(&htim2);
+	HAL_TIM_Base_Start(&htim1);
+	 // HAL_SPI_TransmitReceive_DMA(&hspi3, _TXData,_RxData, 5);
+    //initDMA();
 
-	sharingIsCaring(&hspi3, &Position, &Velocity, &Torque, &devID, &encoder, &hadc1);
+	//sharingIsCaring(&hspi3, &Position, &Velocity, &Torque, &devID, &encoder, &hadc1);
 
 	if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
 	{
@@ -87,8 +97,8 @@ int main(void)
 	}
 
 	GPIOA -> ODR &= ~GPIO_PIN_1;
-	GPIOB -> ODR &= ~GPIO_PIN_3;
-	GPIOA -> ODR |= GPIO_PIN_12;
+	GPIOA -> ODR |= GPIO_PIN_10;
+	GPIOA -> ODR &= ~GPIO_PIN_12;
 
 	encoder.begin(&hspi1, 0);
 	Position.setSetPoint(2048);
@@ -96,12 +106,16 @@ int main(void)
 	__HAL_TIM_SET_AUTORELOAD(&htim2, PCLK1_Freq / PWM_Period);
 	__HAL_TIM_SET_AUTORELOAD(&htim1, PCLK1_Freq / PWM_Period);
 
+
+	encoder.totalAngle();
 	HAL_TIM_Base_Start(&htim7);
 
-	__HAL_TIM_SET_COUNTER(&htim7, 0);
+	__HAL_TIM_SET_COUNTER(&htim7, 1);
 	__HAL_TIM_ENABLE_IT(&htim7, TIM_IT_UPDATE);
 
 	while (1) {
+
+		//runControllers();
 	}
 }
 
@@ -112,7 +126,8 @@ void SystemClock_Config(void)
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
 	RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-
+	/**Initializes the CPU, AHB and APB busses clocks
+	 */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
 	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
 	RCC_OscInitStruct.MSICalibrationValue = 0;
@@ -129,7 +144,8 @@ void SystemClock_Config(void)
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-
+	/**Initializes the CPU, AHB and APB busses clocks
+	 */
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
 			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -156,30 +172,33 @@ void SystemClock_Config(void)
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-
+	/**Configure the main internal regulator output voltage
+	 */
 	if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
 	{
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-
+	/**Configure the Systick interrupt time
+	 */
 	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-
+	/**Configure the Systick
+	 */
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
+	/* SysTick_IRQn interrupt configuration */
 	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 static void TIM7_Init(void)
 {
-
 	TIM_MasterConfigTypeDef sMasterConfig;
 
 	htim7.Instance = TIM7;
-	htim7.Init.Prescaler = count;
+	htim7.Init.Prescaler = 0;
 	htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim7.Init.Period = count;
+	htim7.Init.Period = 2000;
 	htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 	if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
 	{
@@ -192,22 +211,10 @@ static void TIM7_Init(void)
 	{
 		_Error_Handler(__FILE__, __LINE__);
 	}
-	HAL_NVIC_SetPriority(TIM7_IRQn, 0, 1);
-
-	HAL_NVIC_EnableIRQ(TIM7_IRQn);
-
 
 
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //TIM7_IRQHandler(void)
-{
-	__disable_irq();
-	//run_Controllers();
-	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	__enable_irq();
-
-}
 
 static void ADC1_Init(void)
 {
@@ -254,8 +261,7 @@ static void ADC1_Init(void)
 
 static void SPI1_Init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStruct;
-
+	/* SPI1 parameter configuration*/
 	hspi1.Instance = SPI1;
 	hspi1.Init.Mode = SPI_MODE_MASTER;
 	hspi1.Init.Direction = SPI_DIRECTION_2LINES;
@@ -263,7 +269,7 @@ static void SPI1_Init(void)
 	hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
 	hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
 	hspi1.Init.NSS = SPI_NSS_SOFT;
-	hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+	hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
 	hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
 	hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
 	hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -274,28 +280,29 @@ static void SPI1_Init(void)
 	{
 		_Error_Handler(__FILE__, __LINE__);
 	}
+
 }
 static void SPI3_Init(void)
 {
 
-	/* SPI3 parameter configuration*/
-	hspi3.Instance = SPI3;
-	hspi3.Init.Mode = SPI_MODE_SLAVE;
-	hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-	hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
-	hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
-	hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
-	hspi3.Init.NSS = SPI_NSS_SOFT;
-	hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
-	hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
-	hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-	hspi3.Init.CRCPolynomial = 7;
-	hspi3.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-	hspi3.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-	if (HAL_SPI_Init(&hspi3) != HAL_OK)
-	{
-		_Error_Handler(__FILE__, __LINE__);
-	}
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_SLAVE;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 7;
+  hspi3.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi3.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
 }
 
@@ -367,6 +374,12 @@ static void TIM1_Init(void)
 
 	HAL_TIM_MspPostInit(&htim1);
 
+
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *huart)
+{
+    Error_Handler();
 }
 
 static void TIM2_Init(void)
@@ -423,37 +436,130 @@ static void GPIO_Init(void)
 
 	GPIO_InitTypeDef GPIO_InitStruct;
 
+	/* GPIO Ports Clock Enable */
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 
-	HAL_GPIO_WritePin(GPIOA, LED_Pin|ENC_CS_Pin|D2_Pin, GPIO_PIN_RESET);
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(GPIOA, LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin, GPIO_PIN_RESET);
 
-	HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, GPIO_PIN_RESET);
-
-	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin;
+	/*Configure GPIO pins : LED_Pin ENC_CS_Pin D2_Pin D1_Pin */
+	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = Comms_CS_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	HAL_GPIO_Init(Comms_CS_GPIO_Port, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = D1_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	/*Configure GPIO pin : PA4 */
+	GPIO_InitStruct.Pin = GPIO_PIN_4;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	HAL_GPIO_Init(D1_GPIO_Port, &GPIO_InitStruct);
-
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
-static void Init_Controllers(void){
 
+
+void _Error_Handler(char *file, int line){
+	while(1)
+	{
+	}
+}
+
+static void MX_NVIC_Init(void)
+{
+  /* EXTI4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+  /* TIM7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(TIM7_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(TIM7_IRQn);
+}
+//static void MX_NVIC_Init(void)
+//{
+//	/* EXTI4_IRQn interrupt configuration */
+//	HAL_NVIC_SetPriority(EXTI4_IRQn, 2, 0);
+//	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+//	/* TIM7_IRQn interrupt configuration */
+//	HAL_NVIC_SetPriority(TIM7_IRQn, 1, 0);
+//	HAL_NVIC_EnableIRQ(TIM7_IRQn);
+//	/* SPI3_IRQn interrupt configuration */
+//
+//	/* DMA2_Channel1_IRQn interrupt configuration */
+//}
+//static void MX_DMA_Init(void)
+//{
+//	/* DMA controller clock enable */
+//	//__HAL_RCC_DMA1_CLK_ENABLE();
+//	__HAL_RCC_DMA2_CLK_ENABLE();
+//
+//	/* DMA interrupt init */
+//	/* DMA1_Channel1_IRQn interrupt configuration */
+////	HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+////	HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+////	/* DMA1_Channel2_IRQn interrupt configuration */
+////	HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+////	HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+////	/* DMA1_Channel3_IRQn interrupt configuration */
+////	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+////	HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+////	/* DMA2_Channel1_IRQn interrupt configuration */
+//	HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 1, 0);
+//	HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
+//	/* DMA2_Channel2_IRQn interrupt configuration */
+//	HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 0, 0);
+//	HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
+//
+//}
+static void MX_DMA_Init(void)
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
+  /* DMA2_Channel2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
+
+}
+
+
+
+void runControllers(){
+	GPIOA->ODR &= ~GPIO_PIN_0;
+
+	if(controller == 0){
+		Position.setProcessValue(encoder.totalAngle());
+		Out = Position.compute();
+		_TXData[2] = encoder.totalAngle();
+	}
+	if(controller == 1){
+		Velocity.setProcessValue(encoder.totalAngle());
+		Out = Position.compute();
+	}
+	if(controller == 2){
+		Torque.setProcessValue(encoder.totalAngle());
+		Out = Position.compute();
+	}
+	if(Out>0){
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PCLK1_Freq / PWM_Period * Out );
+	}
+	else if (Out<0){
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PCLK1_Freq / PWM_Period * Out*-1);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
+	}
+	else if(Out == 0){
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,0);
+	}
+	GPIOA->ODR |= GPIO_PIN_0;
+
+}
+static void Init_Controllers(void){
 	Position.setInputLimits(-4096.0, 4096.0);
 	Position.setOutputLimits(-1.0, 1.0);
 	Position.setBias(Bias);
@@ -507,62 +613,8 @@ void ReadEEPROM(){
 		Tkd = Data/1000;
 	}
 }
-void runControllers(){
-	__disable_irq();
-	if(controller == 0){
-		Position.setProcessValue(encoder.totalAngle());
-		Out = Position.compute();
-	}
-	if(controller == 0){
-		Velocity.setProcessValue(encoder.totalAngle());
-		Out = Position.compute();
-	}
-	if(controller == 0){
-		Torque.setProcessValue(encoder.totalAngle());
-		Out = Position.compute();
-	}
-	__enable_irq();
-	if(Out<0){
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PCLK1_Freq / PWM_Period *Out*-1);
-	}
-	else if (Out>0){
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PCLK1_Freq / PWM_Period *Out);
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
-	}
-	else if(Out == 0){
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,0);
-	}
-}
 
 
-void _Error_Handler(char *file, int line){
-	while(1)
-	{
-	}
-}
-
-
-static void MX_NVIC_Init(void)
-{
-	/* TIM7_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(TIM7_IRQn);
-	/* EXTI4_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-
-	/* DMA1_Channel2_IRQn interrupt configuration */
-
-}
-static void MX_DMA_Init(void)
-{
-	/* DMA controller clock enable */
-	__HAL_RCC_DMA1_CLK_ENABLE();
-
-}
 #ifdef __cplusplus
 } // extern "C"
 #endif

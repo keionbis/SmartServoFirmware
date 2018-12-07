@@ -23,7 +23,8 @@ C_SRCS += \
 ../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c \
 ../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
 ../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
-../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c 
+../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c \
+../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_spi.c 
 
 OBJS += \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.o \
@@ -45,7 +46,8 @@ OBJS += \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.o \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.o \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.o \
-./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.o 
+./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.o \
+./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_spi.o 
 
 C_DEPS += \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.d \
@@ -67,7 +69,8 @@ C_DEPS += \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.d \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.d \
 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.d \
-./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.d 
+./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.d \
+./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_spi.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

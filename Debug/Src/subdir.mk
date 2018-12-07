@@ -5,12 +5,12 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Src/stm32l4xx_hal_msp.c \
+../Src/stm32l4xx_it.c \
 ../Src/system_stm32l4xx.c 
 
 CPP_SRCS += \
 ../Src/eeprom.cpp \
-../Src/main.cpp \
-../Src/stm32l4xx_it.cpp 
+../Src/main.cpp 
 
 OBJS += \
 ./Src/eeprom.o \
@@ -21,12 +21,12 @@ OBJS += \
 
 C_DEPS += \
 ./Src/stm32l4xx_hal_msp.d \
+./Src/stm32l4xx_it.d \
 ./Src/system_stm32l4xx.d 
 
 CPP_DEPS += \
 ./Src/eeprom.d \
-./Src/main.d \
-./Src/stm32l4xx_it.d 
+./Src/main.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

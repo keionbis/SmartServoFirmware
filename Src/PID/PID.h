@@ -163,6 +163,7 @@ public:
     float getIParam();
     float getDParam();
     float getVel();
+    float getSetpoint();
 
 private:
 
