@@ -2067,11 +2067,11 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(SPI_HandleTypeDef *hspi, uint8_t *
     goto error;
   }
 
-  if ((pTxData == NULL) || (pRxData == NULL) || (Size == 0U))
-  {
-    errorcode = HAL_ERROR;
-    goto error;
-  }
+//  if ((pTxData == NULL) || (pRxData == NULL) || (Size == 0U))
+//  {
+//    errorcode = HAL_ERROR;
+//    goto error;
+//  }
 
   /* Don't overwrite in case of HAL_SPI_STATE_BUSY_RX */
   if (hspi->State != HAL_SPI_STATE_BUSY_RX)
