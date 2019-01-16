@@ -43,7 +43,7 @@
 /* External variables --------------------------------------------------------*/
 
 extern uint16_t  devID;
-extern uint16_t Setpoint;
+extern float Setpoint;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */
@@ -222,8 +222,8 @@ void EXTI4_IRQHandler(void)
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 
 	/* USER CODE END EXTI4_IRQn 0 */
-	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5 );
-	if(_RxData[0] == devID){
+	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
+//	if(_RxData[0] == devID){
 		switch(_RxData[1]){
 		case(0x00):
 				controller = 7;
@@ -231,7 +231,7 @@ void EXTI4_IRQHandler(void)
 
 		case(0x91):
         		controller = 0;
-		Setpoint = _RxData[2];
+		Setpoint = (float)_RxData[2];
 
 		break;
 		case(0x92):
@@ -262,24 +262,29 @@ void EXTI4_IRQHandler(void)
 				_TXData[3] = _RxData[3];
 				_TXData[4] = _RxData[4];
 		break;
-		}
-	}
-	else if(_RxData[0] == 9999){
-		controller +=77;
-		devID = _RxData[2];
 		_TXData[0] = _RxData[0];
 		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2]+1;
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
+		_TXData[2] = _RxData[02];
+		_TXData[3] = _RxData[03];
+		_TXData[4] = _RxData[04];
+	//	}
 	}
-	else{
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-	}
+//	else if(_RxData[0] == 9999){
+//		controller +=77;
+//		devID = _RxData[2];
+//		_TXData[0] = _RxData[0];
+//		_TXData[1] = _RxData[1];
+//		_TXData[2] = _RxData[2]+1;
+//		_TXData[3] = _RxData[3];
+//		_TXData[4] = _RxData[4];
+//	}
+//	else{
+//		_TXData[0] = _RxData[0];
+//		_TXData[1] = _RxData[1];
+//		_TXData[2] = _RxData[2];
+//		_TXData[3] = _RxData[3];
+//		_TXData[4] = _RxData[4];
+//	}
 
 	}
 

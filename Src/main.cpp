@@ -34,7 +34,7 @@ PID Position(1, 0, 0, 0.00025);
 PID Velocity(1, 0, 0, 0.0025);
 PID Torque(1, 0, 0, 0.0025);
 MA702 encoder;
-float Pkp = 1, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
+float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
 uint16_t  devID = 1;
 uint32_t Data = 0;
 extern uint16_t _RxData[5];
@@ -620,7 +620,7 @@ void ReadEEPROM(){
 		EE_ReadVariable(VirtAddVarTab[0], &Data);
 		devID = Data/1000;
 		EE_ReadVariable(VirtAddVarTab[1], &Data);
-		Pkp = Data/1000;
+		Pkp = 8;//Data/1000;
 		EE_ReadVariable(VirtAddVarTab[2], &Data);
 		Pki = Data/1000;
 		EE_ReadVariable(VirtAddVarTab[3], &Data);
