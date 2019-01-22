@@ -62,6 +62,7 @@ extern SPI_HandleTypeDef hspi3;
 extern uint16_t _TXData[5];
 uint16_t _RxData[5] = {1, 1, 1, 1,1};
 extern int controller;
+extern int replyNow;
 
 /**
  * @brief This function handles Non maskable interrupt.
@@ -216,6 +217,10 @@ void SysTick_Handler(void)
 /**
  * @brief This function handles EXTI line4 interrupt.
  */
+uint16_t DebugArray[500] = {0}, k = 0;
+uint16_t DebugTXArray[500] = {0}, h = 0;
+
+int x = 0;
 void EXTI4_IRQHandler(void)
 {
 	/* USER CODE BEGIN EXTI4_IRQn 0 */
@@ -223,7 +228,16 @@ void EXTI4_IRQHandler(void)
 
 	/* USER CODE END EXTI4_IRQn 0 */
 	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
-//	if(_RxData[0] == devID){
+
+	if(_RxData[0] == devID){
+		replyNow = 1;
+//		for(x = 0;x<5;x++){
+//				DebugArray[k] = _RxData[x];;
+//				k++;
+//			}
+//			if(k == 500){
+//				k = 0;
+//			}
 		switch(_RxData[1]){
 		case(0x00):
 				controller = 7;
@@ -267,7 +281,7 @@ void EXTI4_IRQHandler(void)
 		_TXData[2] = _RxData[02];
 		_TXData[3] = _RxData[03];
 		_TXData[4] = _RxData[04];
-	//	}
+		}
 	}
 //	else if(_RxData[0] == 9999){
 //		controller +=77;
@@ -278,13 +292,21 @@ void EXTI4_IRQHandler(void)
 //		_TXData[3] = _RxData[3];
 //		_TXData[4] = _RxData[4];
 //	}
-//	else{
-//		_TXData[0] = _RxData[0];
-//		_TXData[1] = _RxData[1];
-//		_TXData[2] = _RxData[2];
-//		_TXData[3] = _RxData[3];
-//		_TXData[4] = _RxData[4];
-//	}
+	else{
+		replyNow = 0;
+		_TXData[0] = _RxData[0];
+		_TXData[1] = _RxData[1];
+		_TXData[2] = _RxData[2];
+		_TXData[3] = _RxData[3];
+		_TXData[4] = _RxData[4];
+//		for(x = 0;x<5;x++){
+//				DebugTXArray[h] = _TXData[x];;
+//				h++;
+//			}
+//			if(h == 500){
+//				h = 0;
+//			}
+	}
 
 	}
 

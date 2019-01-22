@@ -38,6 +38,7 @@ float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tk
 uint16_t  devID = 1;
 uint32_t Data = 0;
 extern uint16_t _RxData[5];
+int replyNow = 1;
 
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -499,8 +500,14 @@ void runControllers(){
 			Position.setProcessValue(encoder.totalAngle());
 			Position.setSetPoint(Setpoint);
 			Out = Position.compute();
-			_TXData[2] = encoder.totalAngle();
-			_TXData[3] = (uint16_t)(Out*1000);
+			if(replyNow){
+				_TXData[0] = _RxData[0];
+				_TXData[1] = _RxData[1];
+				_TXData[4] = _RxData[4];
+
+				_TXData[2] = encoder.totalAngle();
+				_TXData[3] = (uint16_t)(Out*1000);
+			}
 		}
 		if(controller == 1){
 			Velocity.setSetPoint(Setpoint);
