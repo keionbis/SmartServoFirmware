@@ -1,5 +1,5 @@
-Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.o: \
- ../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
+Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_iwdg.o: \
+ ../Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_iwdg.c \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  /home/kbisland/idek2/Inc/stm32l4xx_hal_conf.h \
  /home/kbisland/idek2/Inc/main.h \

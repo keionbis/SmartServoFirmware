@@ -28,13 +28,14 @@ Src/stm32l4xx_it.o: ../Src/stm32l4xx_it.c \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c_ex.h \
+ /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_iwdg.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi_ex.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
- /home/kbisland/idek2/Inc/stm32l4xx_it.h ../Src/eeprom.h
+ /home/kbisland/idek2/Inc/stm32l4xx_it.h
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 
@@ -94,6 +95,8 @@ Src/stm32l4xx_it.o: ../Src/stm32l4xx_it.c \
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c_ex.h:
 
+/home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_iwdg.h:
+
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h:
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h:
@@ -107,5 +110,3 @@ Src/stm32l4xx_it.o: ../Src/stm32l4xx_it.c \
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 
 /home/kbisland/idek2/Inc/stm32l4xx_it.h:
-
-../Src/eeprom.h:
