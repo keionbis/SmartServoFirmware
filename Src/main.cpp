@@ -30,15 +30,15 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim7;
-PID Position(1, 0, 0, 0.00025);
+PID Position(50, 0, 0, 0.00025);
 PID Velocity(1, 0, 0, 0.0025);
 PID Torque(1, 0, 0, 0.0025);
 MA702 encoder;
 float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
-uint16_t  devID = 1;
+uint16_t  devID = 3;
 uint32_t Data = 0;
 extern uint16_t _RxData[5];
-int replyNow = 1;
+int replyNow = 0;
 
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -444,9 +444,9 @@ static void GPIO_Init(void)
 	HAL_GPIO_WritePin(GPIOA, LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pins : LED_Pin ENC_CS_Pin D2_Pin D1_Pin */
-	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin;
+	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin|GPIO_PIN_4;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -501,25 +501,37 @@ void runControllers(){
 			Position.setSetPoint(Setpoint);
 			Out = Position.compute();
 			if(replyNow){
-				_TXData[0] = _RxData[0];
-				_TXData[1] = _RxData[1];
-				_TXData[4] = _RxData[4];
-
+				_TXData[0] = devID;
+				_TXData[1] = 0x91;
 				_TXData[2] = encoder.totalAngle();
-				_TXData[3] = (uint16_t)(Out*1000);
+				if(_TXData[2]<0){
+					_TXData[3] = 1 ;
+				}
+				else{
+					_TXData[3] = 0 ;
+
+				}
+
+//				_TXData[4] = (uint16_t)(Out*1000);
 			}
 		}
 		if(controller == 1){
 			Velocity.setSetPoint(Setpoint);
 			Velocity.setProcessValue(encoder.getVelocity());
 			Out = Position.compute();
+			if(replyNow){
+
 			_TXData[2] = encoder.getVelocity();
+			}
 		}
 		if(controller == 2){
 			Torque.setSetPoint(Setpoint);
 			Torque.setProcessValue(HAL_ADC_GetValue(&hadc1));
 			Out = Position.compute();
+			if(replyNow){
+
 			_TXData[2] = (uint16_t)(Out*1000);
+			}
 
 		}
 
@@ -537,9 +549,12 @@ void runControllers(){
 		}
 	}
 	if(controller ==7){
+		if(replyNow){
+
 		_TXData[2] = encoder.totalAngle();
 
 		_TXData[3] = HAL_ADC_GetValue(&hadc1);
+		}
 	}
 	if(controller>10 && controller<20){
 		Position.setTunings((_RxData[2]/1000), (_RxData[3]/1000), (_RxData[4]/1000));
@@ -595,6 +610,7 @@ void runControllers(){
 static void Init_Controllers(void){
 	Position.setInputLimits(-4096.0, 4096.0);
 	Position.setOutputLimits(-1.0, 1.0);
+	Position.setTunings(Pkd, Pki, Pkd);
 	Position.setBias(Bias);
 	Position.setMode(AUTO_MODE);
 	Velocity.setInputLimits(-1.660*4096,1.660*4096);//max velocity in rpm* enc tics/rev
@@ -625,9 +641,9 @@ void ReadEEPROM(){
 	}//write default PID vals
 	else{
 		EE_ReadVariable(VirtAddVarTab[0], &Data);
-		devID = Data/1000;
+		devID =3;// Data/1000;
 		EE_ReadVariable(VirtAddVarTab[1], &Data);
-		Pkp = 8;//Data/1000;
+		Pkp = 010;//Data/1000;
 		EE_ReadVariable(VirtAddVarTab[2], &Data);
 		Pki = Data/1000;
 		EE_ReadVariable(VirtAddVarTab[3], &Data);

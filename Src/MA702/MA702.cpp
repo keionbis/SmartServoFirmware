@@ -62,7 +62,7 @@ signed long long MA702::readAngleRaw(){
 	uint8_t highStateCount = 0;
 	//HAL_SPI_Init(hspi);_
 	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-	HAL_SPI_TransmitReceive(hspi, 0x00, (uint8_t*)angle_tmp, 1, 10);
+	HAL_SPI_TransmitReceive(hspi, 0x00, (uint8_t*)angle_tmp, 1, 0);
 	//HAL_SPI_DeInit(hspi);
 	while (SPI1->SR & SPI_SR_BSY);
 	angle = angle_tmp[0];

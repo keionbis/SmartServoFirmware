@@ -225,73 +225,77 @@ void EXTI4_IRQHandler(void)
 {
 	/* USER CODE BEGIN EXTI4_IRQn 0 */
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
-
+HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
 	/* USER CODE END EXTI4_IRQn 0 */
 	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
+//	for(x = 0;x<5;x++){
+//							DebugArray[k] = _RxData[x];;
+//							k++;
+//						}
+//						if(k == 500){
+//							k = 0;
+//						}
 
 	if(_RxData[0] == devID){
 		replyNow = 1;
-//		for(x = 0;x<5;x++){
-//				DebugArray[k] = _RxData[x];;
-//				k++;
-//			}
-//			if(k == 500){
-//				k = 0;
-//			}
+
 		switch(_RxData[1]){
 		case(0x00):
-				controller = 7;
+						controller = 7;
 		break;
 
 		case(0x91):
-        		controller = 0;
+        				controller = 0;
 		Setpoint = (float)_RxData[2];
 
 		break;
 		case(0x92):
-		        controller = 1;
-		Setpoint = _RxData[2];
+		        		controller = 1;
+		if(_RxData[3])
+			Setpoint = _RxData[2]*-1;
+		else
+			Setpoint = _RxData[2];
 
 		break;
 		case(0x93):
-		        controller = 2;
+		        		controller = 2;
 		Setpoint = _RxData[2];
 
 		break;
 		case(0x47):
-		        controller +=10;
+		        		controller +=10;
 		break;
 		case(0x48):
-				controller +=20;
+						controller +=20;
 		break;
 		case(0x49):
-			    controller +=30;
+			    		controller +=30;
 		break;
 		case(0x22):
-				controller +=77;
-		        devID =_RxData[2];
-				_TXData[0] = _RxData[0];
-				_TXData[1] = _RxData[1];
-				_TXData[2] = _RxData[2];
-				_TXData[3] = _RxData[3];
-				_TXData[4] = _RxData[4];
+						controller +=77;
+		devID =_RxData[2];
+		_TXData[0] = _RxData[0];
+		_TXData[1] = _RxData[1];
+		_TXData[2] = _RxData[2];
+		_TXData[3] = _RxData[3];
+		_TXData[4] = _RxData[4];
 		break;
 		_TXData[0] = _RxData[0];
 		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[02];
-		_TXData[3] = _RxData[03];
-		_TXData[4] = _RxData[04];
+		_TXData[2] = _RxData[2];
+		_TXData[3] = _RxData[3];
+		_TXData[4] = _RxData[4];
 		}
 	}
-//	else if(_RxData[0] == 9999){
-//		controller +=77;
-//		devID = _RxData[2];
-//		_TXData[0] = _RxData[0];
-//		_TXData[1] = _RxData[1];
-//		_TXData[2] = _RxData[2]+1;
-//		_TXData[3] = _RxData[3];
-//		_TXData[4] = _RxData[4];
-//	}
+	//	else if(_RxData[0] == 9999){
+	//		controller +=77;
+	//		devID = _RxData[2];
+	//		_TXData[0] = _RxData[0];
+	//		_TXData[1] = _RxData[1];
+	//		_TXData[2] = _RxData[2]+1;
+	//		_TXData[3] = _RxData[3];
+	//		_TXData[4] = _RxData[4];
+	//	}
 	else{
 		replyNow = 0;
 		_TXData[0] = _RxData[0];
@@ -299,108 +303,108 @@ void EXTI4_IRQHandler(void)
 		_TXData[2] = _RxData[2];
 		_TXData[3] = _RxData[3];
 		_TXData[4] = _RxData[4];
-//		for(x = 0;x<5;x++){
-//				DebugTXArray[h] = _TXData[x];;
-//				h++;
-//			}
-//			if(h == 500){
-//				h = 0;
-//			}
+		//		for(x = 0;x<5;x++){
+		//				DebugTXArray[h] = _TXData[x];;
+		//				h++;
+		//			}
+		//			if(h == 500){
+		//				h = 0;
+		//			}
 	}
 
-	}
+}
 
-	/**
-	 * @brief This function handles DMA1 channel1 global interrupt.
-	 */
-	void DMA1_Channel1_IRQHandler(void)
-	{
-		/* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+/**
+ * @brief This function handles DMA1 channel1 global interrupt.
+ */
+void DMA1_Channel1_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 
-		/* USER CODE END DMA1_Channel1_IRQn 0 */
-		HAL_DMA_IRQHandler(&hdma_adc1);
-		/* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+	/* USER CODE END DMA1_Channel1_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_adc1);
+	/* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
-		/* USER CODE END DMA1_Channel1_IRQn 1 */
-	}
+	/* USER CODE END DMA1_Channel1_IRQn 1 */
+}
 
-	/**
-	 * @brief This function handles DMA1 channel2 global interrupt.
-	 */
-	void DMA1_Channel2_IRQHandler(void)
-	{
-		/* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
+/**
+ * @brief This function handles DMA1 channel2 global interrupt.
+ */
+void DMA1_Channel2_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
 
-		/* USER CODE END DMA1_Channel2_IRQn 0 */
-		HAL_DMA_IRQHandler(&hdma_spi1_rx);
-		/* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
+	/* USER CODE END DMA1_Channel2_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_spi1_rx);
+	/* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
 
-		/* USER CODE END DMA1_Channel2_IRQn 1 */
-	}
+	/* USER CODE END DMA1_Channel2_IRQn 1 */
+}
 
-	/**
-	 * @brief This function handles DMA1 channel3 global interrupt.
-	 */
-	void DMA1_Channel3_IRQHandler(void)
-	{
-		/* USER CODE BEGIN DMA1_Channel3_IRQn 0 */
+/**
+ * @brief This function handles DMA1 channel3 global interrupt.
+ */
+void DMA1_Channel3_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA1_Channel3_IRQn 0 */
 
-		/* USER CODE END DMA1_Channel3_IRQn 0 */
-		HAL_DMA_IRQHandler(&hdma_spi1_tx);
-		/* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
+	/* USER CODE END DMA1_Channel3_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_spi1_tx);
+	/* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
 
-		/* USER CODE END DMA1_Channel3_IRQn 1 */
-	}
+	/* USER CODE END DMA1_Channel3_IRQn 1 */
+}
 
-	/**
-	 * @brief This function handles TIM7 global interrupt.
-	 */
-	void TIM7_IRQHandler(void)
-	{
-		/* USER CODE BEGIN TIM7_IRQn 0 */
+/**
+ * @brief This function handles TIM7 global interrupt.
+ */
+void TIM7_IRQHandler(void)
+{
+	/* USER CODE BEGIN TIM7_IRQn 0 */
 
-		/* USER CODE END TIM7_IRQn 0 */
-		HAL_TIM_IRQHandler(&htim7);
-		runControllers();
-		/* USER CODE BEGIN TIM7_IRQn 1 */
+	/* USER CODE END TIM7_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim7);
+	runControllers();
+	/* USER CODE BEGIN TIM7_IRQn 1 */
 
-		/* USER CODE END TIM7_IRQn 1 */
-	}
+	/* USER CODE END TIM7_IRQn 1 */
+}
 
-	/**
-	 * @brief This function handles DMA2 channel1 global interrupt.
-	 */
-	void DMA2_Channel1_IRQHandler(void)
-	{
-		/* USER CODE BEGIN DMA2_Channel1_IRQn 0 */
+/**
+ * @brief This function handles DMA2 channel1 global interrupt.
+ */
+void DMA2_Channel1_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA2_Channel1_IRQn 0 */
 
-		/* USER CODE END DMA2_Channel1_IRQn 0 */
+	/* USER CODE END DMA2_Channel1_IRQn 0 */
 
-		HAL_DMA_IRQHandler(&hdma_spi3_rx);
-		/* USER CODE BEGIN DMA2_Channel1_IRQn 1 */
+	HAL_DMA_IRQHandler(&hdma_spi3_rx);
+	/* USER CODE BEGIN DMA2_Channel1_IRQn 1 */
 
-		/* USER CODE END DMA2_Channel1_IRQn 1 */
-	}
+	/* USER CODE END DMA2_Channel1_IRQn 1 */
+}
 
-	/**
-	 * @brief This function handles DMA2 channel2 global interrupt.
-	 */
-	void DMA2_Channel2_IRQHandler(void)
-	{
-		/* USER CODE BEGIN DMA2_Channel2_IRQn 0 */
+/**
+ * @brief This function handles DMA2 channel2 global interrupt.
+ */
+void DMA2_Channel2_IRQHandler(void)
+{
+	/* USER CODE BEGIN DMA2_Channel2_IRQn 0 */
 
-		/* USER CODE END DMA2_Channel2_IRQn 0 */
-		HAL_DMA_IRQHandler(&hdma_spi3_tx);
-		//	HAL_SPI_TxCpltCallback(&hspi3);
+	/* USER CODE END DMA2_Channel2_IRQn 0 */
+	HAL_DMA_IRQHandler(&hdma_spi3_tx);
+	//	HAL_SPI_TxCpltCallback(&hspi3);
 
-		/* USER CODE BEGIN DMA2_Channel2_IRQn 1 */
+	/* USER CODE BEGIN DMA2_Channel2_IRQn 1 */
 
-		/* USER CODE END DMA2_Channel2_IRQn 1 */
-	}
-	/* USER CODE BEGIN 1 */
+	/* USER CODE END DMA2_Channel2_IRQn 1 */
+}
+/* USER CODE BEGIN 1 */
 
-	/* USER CODE END 1 */
-	/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/* USER CODE END 1 */
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 #ifdef __cplusplus
 }
 #endif
