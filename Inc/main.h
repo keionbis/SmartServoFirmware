@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -91,7 +91,8 @@
  extern "C" {
 #endif
 void _Error_Handler(char *, int);
-
+void runControllers();
+void initDMA();
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 #ifdef __cplusplus
 }

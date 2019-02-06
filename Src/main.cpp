@@ -5,7 +5,6 @@
 #include "MA702/MA702.h"
 #include "PID/PID.h"
 #include "eeprom.h"
-#include "stm32l4xx_hal_iwdg.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -20,7 +19,6 @@ uint16_t VirtAddVarTab[NB_OF_VAR] = {0x5555, 0x6666, 0x7777, 0x8888, 0x9999, 0xA
 uint16_t VarDataTab[NB_OF_VAR] = {0, 0, 0};
 uint16_t VarValue = 0;
 int controller = 0;
-IWDG_HandleTypeDef hiwdg;
 ADC_HandleTypeDef hadc1;
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
@@ -55,8 +53,6 @@ static void ADC1_Init(void);
 static void Init_Controllers(void);
 static void MX_DMA_Init(void);
 static void MX_NVIC_Init();
-static void MX_IWDG_Init(void);
-
 void ReadEEPROM();
 int PCLK1_Freq = HAL_RCC_GetPCLK2Freq();
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -112,8 +108,6 @@ int main(void)
 
 
 	encoder.totalAngle();
-	  MX_IWDG_Init();
-
 	HAL_TIM_Base_Start(&htim7);
 
 	__HAL_TIM_SET_COUNTER(&htim7, 1);
@@ -496,19 +490,6 @@ static void MX_DMA_Init(void)
 	HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
 
 }
-static void MX_IWDG_Init(void)
-{
-
-  hiwdg.Instance = IWDG;
-  hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
-  hiwdg.Init.Window = 4095;
-  hiwdg.Init.Reload = 4095;
-  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
 
 
 
@@ -621,7 +602,7 @@ void runControllers(){
 		controller-=77;
 	}
 
-	HAL_IWDG_Refresh(&hiwdg); //reset watchdog so it doesnt trip
+
 
 	GPIOA->ODR |= GPIO_PIN_0;
 

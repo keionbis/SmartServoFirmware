@@ -29,7 +29,6 @@ Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.o: \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c_ex.h \
- /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_iwdg.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
  /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h \
@@ -94,8 +93,6 @@ Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma_ex.o: \
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c.h:
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_i2c_ex.h:
-
-/home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_iwdg.h:
 
 /home/kbisland/idek2/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h:
 
