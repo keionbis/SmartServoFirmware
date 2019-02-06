@@ -224,33 +224,34 @@ int x = 0;
 void EXTI4_IRQHandler(void)
 {
 	/* USER CODE BEGIN EXTI4_IRQn 0 */
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
-HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
+
+	HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
 	/* USER CODE END EXTI4_IRQn 0 */
 	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
-//	for(x = 0;x<5;x++){
-//							DebugArray[k] = _RxData[x];;
-//							k++;
-//						}
-//						if(k == 500){
-//							k = 0;
-//						}
+	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+	//	for(x = 0;x<5;x++){
+	//							DebugArray[k] = _RxData[x];;
+	//							k++;
+	//						}
+	//						if(k == 500){
+	//							k = 0;
+	//						}
 
 	if(_RxData[0] == devID){
 		replyNow = 1;
 
 		switch(_RxData[1]){
 		case(0x00):
-						controller = 7;
+								controller = 7;
 		break;
 
 		case(0x91):
-        				controller = 0;
+        						controller = 0;
 		Setpoint = (float)_RxData[2];
 
 		break;
 		case(0x92):
-		        		controller = 1;
+		        				controller = 1;
 		if(_RxData[3])
 			Setpoint = _RxData[2]*-1;
 		else
@@ -258,21 +259,21 @@ HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
 
 		break;
 		case(0x93):
-		        		controller = 2;
+		        				controller = 2;
 		Setpoint = _RxData[2];
 
 		break;
 		case(0x47):
-		        		controller +=10;
+		        				controller +=10;
 		break;
 		case(0x48):
-						controller +=20;
+								controller +=20;
 		break;
 		case(0x49):
-			    		controller +=30;
+			    				controller +=30;
 		break;
 		case(0x22):
-						controller +=77;
+								controller +=77;
 		devID =_RxData[2];
 		_TXData[0] = _RxData[0];
 		_TXData[1] = _RxData[1];
