@@ -224,11 +224,11 @@ int x = 0;
 void EXTI4_IRQHandler(void)
 {
 	/* USER CODE BEGIN EXTI4_IRQn 0 */
+	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 
 	HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
 	/* USER CODE END EXTI4_IRQn 0 */
 	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
-	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 	//	for(x = 0;x<5;x++){
 	//							DebugArray[k] = _RxData[x];;
 	//							k++;

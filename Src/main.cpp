@@ -5,6 +5,7 @@
 #include "MA702/MA702.h"
 #include "PID/PID.h"
 #include "eeprom.h"
+#include <cmath>
 
 #ifdef __cplusplus
 extern "C"
@@ -18,6 +19,7 @@ extern "C"
 uint16_t VirtAddVarTab[NB_OF_VAR] = {0x5555, 0x6666, 0x7777, 0x8888, 0x9999, 0xAAAA, 0xBBBB, 0xCCCC, 0xDDDD, 0xEEEE};
 uint16_t VarDataTab[NB_OF_VAR] = {0, 0, 0};
 uint16_t VarValue = 0;
+int onBoot = 0;
 int controller = 0;
 ADC_HandleTypeDef hadc1;
 SPI_HandleTypeDef hspi1;
@@ -30,11 +32,12 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim7;
-PID Position(50, 0, 0, 0.00025);
-PID Velocity(1, 0, 0, 0.0025);
-PID Torque(1, 0, 0, 0.0025);
+PID Position(1, 0, 0, 0.00000000038146973);
+PID Velocity(1, 0, 0, 0.00000000038146973);
+PID Torque(1, 0, 0, 0.00000000038146973);
 MA702 encoder;
 float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
+float PkpSetpoint = 50;
 uint16_t  devID = 3;
 uint32_t Data = 0;
 extern uint16_t _RxData[5];
@@ -64,16 +67,15 @@ uint8_t wTransferState = 0;
 int main(void)
 
 {
-
-	HAL_Init();
-	SystemClock_Config();
 	GPIO_Init();
-	MX_DMA_Init();
 	TIM2_Init();
 	TIM1_Init();
+	HAL_Init();
+	SystemClock_Config();
+	MX_DMA_Init();
+
 	SPI1_Init();
 	ADC1_Init();
-	TIM7_Init();
 	SPI3_Init();
 
 	/* Initialize interrupts */
@@ -82,8 +84,21 @@ int main(void)
 	EE_Init();
 	ReadEEPROM();
 	Init_Controllers();
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_Base_Start(&htim1);
+
+	encoder.begin(&hspi1, 0);
+	int x;
+	int avg;
+	for(x = 0;x<100;x++)
+	{
+		avg += encoder.totalAngle();
+	}
+	Setpoint = avg/100;
+	//		Setpoint = encoder.totalAngle();
+	//		Setpoint = encoder.totalAngle();
+
+	Position.setSetPoint(Setpoint);
+
+
 
 	if (HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
 	{
@@ -93,21 +108,30 @@ int main(void)
 	{
 		Error_Handler();
 	}
+	__HAL_TIM_SET_AUTORELOAD(&htim2, PCLK1_Freq / PWM_Period);
+	__HAL_TIM_SET_AUTORELOAD(&htim1, PCLK1_Freq / PWM_Period);
+	HAL_TIM_Base_Start(&htim2);
+	HAL_TIM_Base_Start(&htim1);
 
+	Position.setInputLimits(-4096.0, 4096.0);
+	Position.setOutputLimits(-1.0, 1.0);
+	Position.setBias(0);
+	Position.setMode(AUTO_MODE);
+
+	//Position.compute();
+	Out = 0;
 	GPIOA -> ODR &= ~GPIO_PIN_1;
 	GPIOA -> ODR |= GPIO_PIN_10;
 	GPIOA -> ODR &= ~GPIO_PIN_12;
+	HAL_TIM_MspPostInit(&htim1);
+	HAL_TIM_MspPostInit(&htim2);
 
-	encoder.begin(&hspi1, 0);
-	Setpoint = encoder.totalAngle();
-
-	Position.setSetPoint(Setpoint);
-
-	__HAL_TIM_SET_AUTORELOAD(&htim2, PCLK1_Freq / PWM_Period);
-	__HAL_TIM_SET_AUTORELOAD(&htim1, PCLK1_Freq / PWM_Period);
+	//	encoder.totalAngle();
+	__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,0);
+	TIM7_Init();
 
 
-	encoder.totalAngle();
 	HAL_TIM_Base_Start(&htim7);
 
 	__HAL_TIM_SET_COUNTER(&htim7, 1);
@@ -115,7 +139,7 @@ int main(void)
 
 	while (1) {
 
-		//runControllers();
+		//	runControllers();
 	}
 }
 
@@ -317,7 +341,7 @@ static void TIM1_Init(void)
 	htim1.Instance = TIM1;
 	htim1.Init.Prescaler = 0;
 	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim1.Init.Period = 0;
+	htim1.Init.Period = 800;
 	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim1.Init.RepetitionCounter = 0;
 	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -372,7 +396,6 @@ static void TIM1_Init(void)
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-	HAL_TIM_MspPostInit(&htim1);
 
 
 }
@@ -392,7 +415,7 @@ static void TIM2_Init(void)
 	htim2.Instance = TIM2;
 	htim2.Init.Prescaler = 0;
 	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim2.Init.Period = 0;
+	htim2.Init.Period = 800;
 	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 	if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -427,7 +450,6 @@ static void TIM2_Init(void)
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
-	HAL_TIM_MspPostInit(&htim2);
 
 }
 
@@ -444,7 +466,7 @@ static void GPIO_Init(void)
 	HAL_GPIO_WritePin(GPIOA, LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pins : LED_Pin ENC_CS_Pin D2_Pin D1_Pin */
-	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin|GPIO_PIN_4;
+	GPIO_InitStruct.Pin = LED_Pin|ENC_CS_Pin|D2_Pin|D1_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
@@ -495,6 +517,9 @@ static void MX_DMA_Init(void)
 
 void runControllers(){
 	GPIOA->ODR &= ~GPIO_PIN_0;
+	if(encoder.totalAngle() == (uint16_t)Setpoint){
+		return;
+	}
 	if(controller ==0 || controller == 1 || controller == 2){
 		if(controller == 0){
 			Position.setProcessValue(encoder.totalAngle());
@@ -512,7 +537,7 @@ void runControllers(){
 
 				}
 
-//				_TXData[4] = (uint16_t)(Out*1000);
+				//				_TXData[4] = (uint16_t)(Out*1000);
 			}
 		}
 		if(controller == 1){
@@ -521,7 +546,7 @@ void runControllers(){
 			Out = Position.compute();
 			if(replyNow){
 
-			_TXData[2] = encoder.getVelocity();
+				_TXData[2] = encoder.getVelocity();
 			}
 		}
 		if(controller == 2){
@@ -530,7 +555,7 @@ void runControllers(){
 			Out = Position.compute();
 			if(replyNow){
 
-			_TXData[2] = (uint16_t)(Out*1000);
+				_TXData[2] = (uint16_t)(Out*1000);
 			}
 
 		}
@@ -551,9 +576,9 @@ void runControllers(){
 	if(controller ==7){
 		if(replyNow){
 
-		_TXData[2] = encoder.totalAngle();
+			_TXData[2] = encoder.totalAngle();
 
-		_TXData[3] = HAL_ADC_GetValue(&hadc1);
+			_TXData[3] = HAL_ADC_GetValue(&hadc1);
 		}
 	}
 	if(controller>10 && controller<20){
@@ -602,8 +627,10 @@ void runControllers(){
 		controller-=77;
 	}
 
-
-
+	if(Pkp<PkpSetpoint){
+		Pkp +=1;
+		Position.setTunings(Pkp, Pki, Pkd);
+	}
 	GPIOA->ODR |= GPIO_PIN_0;
 
 }
@@ -627,40 +654,40 @@ static void Init_Controllers(void){
 }
 void ReadEEPROM(){
 	EE_ReadVariable(VirtAddVarTab[1], &Data);
-	if(Data == 0){
-		EE_WriteVariable(VirtAddVarTab[0], (uint32_t)devID);
-		EE_WriteVariable(VirtAddVarTab[1], (uint32_t)Pkp*1000);
-		EE_WriteVariable(VirtAddVarTab[2], (uint32_t)Pki*1000);
-		EE_WriteVariable(VirtAddVarTab[3], (uint32_t)Pkd*1000);
-		EE_WriteVariable(VirtAddVarTab[4], (uint32_t)Vkp*1000);
-		EE_WriteVariable(VirtAddVarTab[5], (uint32_t)Vki*1000);
-		EE_WriteVariable(VirtAddVarTab[6], (uint32_t)Vki*1000);
-		EE_WriteVariable(VirtAddVarTab[7], (uint32_t)Tkp*1000);
-		EE_WriteVariable(VirtAddVarTab[8], (uint32_t)Tki*1000);
-		EE_WriteVariable(VirtAddVarTab[9], (uint32_t)Tkd*1000);
-	}//write default PID vals
-	else{
-		EE_ReadVariable(VirtAddVarTab[0], &Data);
-		devID =3;// Data/1000;
-		EE_ReadVariable(VirtAddVarTab[1], &Data);
-		Pkp = 010;//Data/1000;
-		EE_ReadVariable(VirtAddVarTab[2], &Data);
-		Pki = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[3], &Data);
-		Pkd = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[4], &Data);
-		Vkp = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[5], &Data);
-		Vki = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[6], &Data);
-		Vkd = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[7], &Data);
-		Tkp = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[8], &Data);
-		Tki = Data/1000;
-		EE_ReadVariable(VirtAddVarTab[9], &Data);
-		Tkd = Data/1000;
-	}
+	//if(Data == 0){
+	EE_WriteVariable(VirtAddVarTab[0], (uint32_t)devID);
+	EE_WriteVariable(VirtAddVarTab[1], (uint32_t)Pkp*1000);
+	EE_WriteVariable(VirtAddVarTab[2], (uint32_t)Pki*1000);
+	EE_WriteVariable(VirtAddVarTab[3], (uint32_t)Pkd*1000);
+	EE_WriteVariable(VirtAddVarTab[4], (uint32_t)Vkp*1000);
+	EE_WriteVariable(VirtAddVarTab[5], (uint32_t)Vki*1000);
+	EE_WriteVariable(VirtAddVarTab[6], (uint32_t)Vki*1000);
+	EE_WriteVariable(VirtAddVarTab[7], (uint32_t)Tkp*1000);
+	EE_WriteVariable(VirtAddVarTab[8], (uint32_t)Tki*1000);
+	EE_WriteVariable(VirtAddVarTab[9], (uint32_t)Tkd*1000);
+	//	}//write default PID vals
+	//	else{
+	//		EE_ReadVariable(VirtAddVarTab[0], &Data);
+	//		devID = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[1], &Data);
+	//		Pkp = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[2], &Data);
+	//		Pki = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[3], &Data);
+	//		Pkd = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[4], &Data);
+	//		Vkp = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[5], &Data);
+	//		Vki = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[6], &Data);
+	//		Vkd = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[7], &Data);
+	//		Tkp = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[8], &Data);
+	//		Tki = Data/1000;
+	//		EE_ReadVariable(VirtAddVarTab[9], &Data);
+	//		Tkd = Data/1000;
+	//	}
 }
 
 

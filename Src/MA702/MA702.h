@@ -27,6 +27,7 @@ public:
 	void end();
 	double readAngle();
 	uint16_t readAngle12();
+	uint16_t readAngleRaw12();
 	signed long long readAngleRaw();
 	uint16_t readAngleRaw(bool* error);
 	uint16_t readAngleRaw16();

@@ -26,7 +26,7 @@ double MA702::readAngle(){
 	return angleInDegree;
 }
 
-uint16_t MA702::readAngleRaw16(){
+uint16_t MA702::readAngleRaw12(){
 	uint16_t angle;
 	uint16_t angle_tmp[1] = {0};
 	GPIOA -> ODR &= ~GPIO_PIN_1;
@@ -45,11 +45,14 @@ uint16_t MA702::readAngleRaw16(){
 uint8_t MA702::readAngleRaw8(){
 	uint16_t angle_tmp[1] = {0};
 	uint16_t angle;
-	HAL_GPIO_WritePin(&_CS_Port, _CS_Pin, GPIO_PIN_RESET);
-	HAL_SPI_TransmitReceive(hspi, 0x00, (uint8_t*)angle_tmp, 2, 0xFF);
-	angle = angle_tmp[0];
-	HAL_GPIO_WritePin(&_CS_Port, _CS_Pin, GPIO_PIN_SET);
-	angle = angle<<8;
+	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+		HAL_SPI_TransmitReceive(hspi, 0x00, (uint8_t*)angle_tmp, 1, 0);
+		//HAL_SPI_DeInit(hspi);
+		while (SPI1->SR & SPI_SR_BSY);
+		angle = angle_tmp[0];
+
+		HAL_GPIO_WritePin( GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+		angle = angle>>4;
 	return angle;
 }
 
