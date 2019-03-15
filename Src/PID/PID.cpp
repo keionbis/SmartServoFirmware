@@ -158,6 +158,42 @@ void PID::setTunings(float Kc, float tauI, float tauD) {
 	tauD_ = tauD / tSample_;
 
 }
+void PID::setTunings(float Kc, float tauI, float tauD, float G, float  C) {
+
+	//Verify that the tunings make sense.
+	if (Kc == 0.0 || tauI < 0.0 || tauD < 0.0) {
+		return;
+	}
+
+	//Store raw values to hand back to user on request.
+	pParam_ = Kc;
+	iParam_ = tauI;
+	dParam_ = tauD;
+	gParam_ = G;
+	cParam_ = C;
+
+	float tempTauR;
+
+	if (tauI == 0.0) {
+		tempTauR = 0.0;
+	} else {
+		tempTauR = (1.0 / tauI) * tSample_;
+	}
+
+	//For "bumpless transfer" we need to rescale the accumulated error.
+	if (inAuto) {
+		if (tempTauR == 0.0) {
+			accError_ = 0.0;
+		} else {
+			accError_ *= (Kc_ * tauR_) / (Kc * tempTauR);
+		}
+	}
+
+	Kc_   = Kc;
+	tauR_ = tempTauR;
+	tauD_ = tauD / tSample_;
+
+}
 
 void PID::reset(void) {
 
@@ -206,6 +242,16 @@ void PID::setSetPoint(float sp) {
 	setPoint_ = sp;
 
 }
+void PID::setGrav(float G) {
+
+	gParam_ = G;
+
+}
+void PID::setCorr(float C) {
+
+	cParam_ = C;
+
+}
 
 void PID::setProcessValue(float pv) {
 
@@ -213,6 +259,7 @@ void PID::setProcessValue(float pv) {
 
 
 }
+
 
 void PID::setBias(float bias){
 
@@ -268,6 +315,7 @@ float PID::compute() {
 
 	//Remember this output for the windup check next time.
 	Velocity = (prevProcessVariable_-processVariable_)/tSample_;
+
 	prevProcessVariable_ = processVariable_;
 
 	prevControllerOutput_ = controllerOutput_;
@@ -276,7 +324,7 @@ float PID::compute() {
 
 	//Scale the output from percent span back out to a real world number.
 
-	return ((controllerOutput_ * outSpan_) + outMin_);
+	return (((controllerOutput_ * outSpan_) + outMin_)+gParam_+cParam_* Velocity);
 
 }
 

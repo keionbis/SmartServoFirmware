@@ -62,7 +62,7 @@ extern SPI_HandleTypeDef hspi3;
 extern uint16_t _TXData[5];
 uint16_t _RxData[5] = {1, 1, 1, 1,1};
 extern int controller;
-extern int replyNow;
+extern int EndSetPoint;
 
 /**
  * @brief This function handles Non maskable interrupt.
@@ -226,92 +226,61 @@ void EXTI4_IRQHandler(void)
 	/* USER CODE BEGIN EXTI4_IRQn 0 */
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 
-	HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
+	//HAL_GPIO_WritePin(ENC_CS_GPIO_Port, ENC_CS_Pin, GPIO_PIN_SET);
 	/* USER CODE END EXTI4_IRQn 0 */
 	HAL_SPI_TransmitReceive_DMA(&hspi3,_TXData,_RxData, 5);
-	//	for(x = 0;x<5;x++){
-	//							DebugArray[k] = _RxData[x];;
-	//							k++;
-	//						}
-	//						if(k == 500){
-	//							k = 0;
-	//						}
 
-	if(_RxData[0] == devID){
-		replyNow = 1;
+	switch(_RxData[1]){
+	case(0x00):
+				controller = 7;
+	break;
 
-		switch(_RxData[1]){
-		case(0x00):
-								controller = 7;
-		break;
+	case(0x91):
+        		controller = 0;
+	Setpoint = (float)_RxData[2];
 
-		case(0x91):
-        						controller = 0;
-		Setpoint = (float)_RxData[2];
-
-		break;
-		case(0x92):
-		        				controller = 1;
-		if(_RxData[3])
-			Setpoint = _RxData[2]*-1;
-		else
-			Setpoint = _RxData[2];
-
-		break;
-		case(0x93):
-		        				controller = 2;
+	break;
+	case(0x92):
+				controller = 1;
+	if(_RxData[3])
+		Setpoint = _RxData[2]*-1;
+	else
 		Setpoint = _RxData[2];
 
+	break;
+	case(0x93):
+				controller = 2;
+	Setpoint = _RxData[2];
+
+	break;
+	case(0x47):
+				 controller +=10;
+	break;
+	case(0x48):
+				controller +=20;
+	break;
+	case(0x49):
+				controller +=30;
+	break;
+
+	case(0xA0):
+					controller +=40;//set kp
 		break;
-		case(0x47):
-		        				controller +=10;
+	case(0xA1):
+					controller +=50;//set ki
 		break;
-		case(0x48):
-								controller +=20;
+	case(0xA2):
+					controller +=60;//set kd
 		break;
-		case(0x49):
-			    				controller +=30;
+	case(0xA3):
+					controller +=70;//set g
 		break;
-		case(0x22):
-								controller +=77;
-		devID =_RxData[2];
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
+	case(0xA4):
+					controller +=80;//set c
 		break;
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		}
+
 	}
-	//	else if(_RxData[0] == 9999){
-	//		controller +=77;
-	//		devID = _RxData[2];
-	//		_TXData[0] = _RxData[0];
-	//		_TXData[1] = _RxData[1];
-	//		_TXData[2] = _RxData[2]+1;
-	//		_TXData[3] = _RxData[3];
-	//		_TXData[4] = _RxData[4];
-	//	}
-	else{
-		replyNow = 0;
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		//		for(x = 0;x<5;x++){
-		//				DebugTXArray[h] = _TXData[x];;
-		//				h++;
-		//			}
-		//			if(h == 500){
-		//				h = 0;
-		//			}
-	}
+
 
 }
 
