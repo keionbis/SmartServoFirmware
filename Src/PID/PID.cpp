@@ -124,40 +124,6 @@ void PID::setOutputLimits(float outMin, float outMax) {
 
 }
 
-void PID::setTunings(float Kc, float tauI, float tauD) {
-
-	//Verify that the tunings make sense.
-	if (Kc == 0.0 || tauI < 0.0 || tauD < 0.0) {
-		return;
-	}
-
-	//Store raw values to hand back to user on request.
-	pParam_ = Kc;
-	iParam_ = tauI;
-	dParam_ = tauD;
-
-	float tempTauR;
-
-	if (tauI == 0.0) {
-		tempTauR = 0.0;
-	} else {
-		tempTauR = (1.0 / tauI) * tSample_;
-	}
-
-	//For "bumpless transfer" we need to rescale the accumulated error.
-	if (inAuto) {
-		if (tempTauR == 0.0) {
-			accError_ = 0.0;
-		} else {
-			accError_ *= (Kc_ * tauR_) / (Kc * tempTauR);
-		}
-	}
-
-	Kc_   = Kc;
-	tauR_ = tempTauR;
-	tauD_ = tauD / tSample_;
-
-}
 void PID::setTunings(float Kc, float tauI, float tauD, float G, float  C) {
 
 	//Verify that the tunings make sense.

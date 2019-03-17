@@ -37,7 +37,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim7;
 
 //Class definitions
-PID Position(0.05, 0, 0, 0.00000000038146973);
+PID Position(50, 0.5, 1, 0.00000000038146973);
 PID Velocity(0.05, 0, 0, 0.00000000038146973);
 PID Torque(0.05, 0, 0, 0.00000000038146973);
 MA702 encoder;
@@ -89,7 +89,7 @@ int main(void)
 	MX_NVIC_Init();
 	HAL_FLASH_Unlock();
 	EE_Init();
-	ReadEEPROM();
+	//ReadEEPROM();
 	Init_Controllers();
 
 	//initialize encoder
@@ -562,47 +562,10 @@ void runControllers(){
 		_TXData[2] = encoder.totalAngle();
 		_TXData[3] = HAL_ADC_GetValue(&hadc1);
 	}
-	if(controller>10 && controller<20){
-		Position.setTunings((_RxData[2]/1000), (_RxData[3]/1000), (_RxData[4]/1000));
-		EE_WriteVariable(VirtAddVarTab[1], (uint32_t)_RxData[2]);
-		EE_WriteVariable(VirtAddVarTab[2], (uint32_t)_RxData[3]);
-		EE_WriteVariable(VirtAddVarTab[3], (uint32_t)_RxData[4]);
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=10;
-	}
-	if(controller>20 && controller<30){
-		Velocity.setTunings((_RxData[2]/1000), (_RxData[3]/1000), (_RxData[4]/1000));
-		EE_WriteVariable(VirtAddVarTab[4], (uint32_t)_RxData[2]);
-		EE_WriteVariable(VirtAddVarTab[5], (uint32_t)_RxData[3]);
-		EE_WriteVariable(VirtAddVarTab[6], (uint32_t)_RxData[4]);
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=20;
-	}
-	if(controller>30 && controller<40){
-		Torque.setTunings((_RxData[2]/1000), (_RxData[3]/1000), (_RxData[4]/1000));
-		EE_WriteVariable(VirtAddVarTab[7], (uint32_t)_RxData[2]);
-		EE_WriteVariable(VirtAddVarTab[8], (uint32_t)_RxData[3]);
-		EE_WriteVariable(VirtAddVarTab[9], (uint32_t)_RxData[4]);
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=30;
-	}
 
-
-	if(controller>40 && controller<50){
+	if(controller ==77){
 		if(_RxData[3] == 1){
-			Pkp = (float)_RxData[2]/100;
+			Pkp = (float)(_RxData[2]/100);
 			Position.setTunings(Pkd, Pki, Pkd);
 		}
 		else if(_RxData[3] == 2){
@@ -620,10 +583,10 @@ void runControllers(){
 		_TXData[2] = _RxData[2];
 		_TXData[3] = _RxData[3];
 		_TXData[4] = _RxData[4];
-		controller-=40;
+		controller = 0;
 	}
 
-	if(controller>50 && controller<60){
+	if(controller == 78){
 		if(_RxData[3] == 1){
 			Pki = (float)_RxData[2]/100;
 			Position.setTunings(Pkd, Pki, Pkd);
@@ -645,7 +608,7 @@ void runControllers(){
 		_TXData[4] = _RxData[4];
 		controller-=50;
 	}
-	if(controller>60 && controller<70){
+	if(controller == 79){
 		if(_RxData[3] == 1){
 			Pkd = (float)_RxData[2]/100;
 			Position.setTunings(Pkd, Pki, Pkd);
@@ -667,16 +630,16 @@ void runControllers(){
 		_TXData[4] = _RxData[4];
 		controller-=60;
 	}
-	if(controller>70 && controller<80){
+	if(controller == 80){
 		if(_RxData[3] == 1){
 
-			Position.setGrav((float)_RxData[2]/100);
+			Position.setGrav((float)((int16_t)(_RxData[2])/100));
 		}
 		else if(_RxData[3] == 2){
-			Position.setGrav((float)_RxData[2]/100);
+			Position.setGrav((float)((int16_t)(_RxData[2])/100));
 		}
 		else if(_RxData[3] == 3){
-			Position.setGrav((float)_RxData[2]/100);
+			Position.setGrav((float)((int16_t)(_RxData[2])/100));
 		}
 
 
@@ -687,15 +650,15 @@ void runControllers(){
 		_TXData[4] = _RxData[4];
 		controller-=70;
 	}
-	if(controller>80 && controller<90){
+	if(controller == 81){
 		if(_RxData[3] == 1){
-			Position.setCorr((float)_RxData[2]/100);
+			Position.setCorr((float)(((int16_t)_RxData[2])/100));
 		}
 		else if(_RxData[3] == 2){
-			Position.setCorr((float)_RxData[2]/100);
+			Position.setCorr((float)(((int16_t)_RxData[2])/100));
 		}
 		else if(_RxData[3] == 3){
-			Position.setCorr((float)_RxData[2]/100);
+			Position.setCorr((float)(((int16_t)_RxData[2])/100));
 		}
 
 		_TXData[0] = _RxData[0];
@@ -706,10 +669,7 @@ void runControllers(){
 		controller-=80;
 	}
 
-	if(Pkp<PkpSetpoint){
-		Pkp +=0.05;
-		Position.setTunings(Pkp, Pki, Pkd);
-	}
+
 	GPIOA->ODR |= GPIO_PIN_0;
 
 }

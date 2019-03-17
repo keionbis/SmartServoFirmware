@@ -102,9 +102,8 @@ public:
 	 * @param tauI - Tuning parameter
 	 * @param tauD - Tuning parameter
 	 */
-	void setTunings(float Kc, float tauI, float tauD);
+	void setTunings(float Kc, float tauI, float tauD, float G = 0, float  C = 0);
 
-	void PID::setTunings(float Kc, float tauI, float tauD, float G, float  C);
 	/**
 	 * Reinitializes controller internals. Automatically
 	 * called on a manual to auto transition.

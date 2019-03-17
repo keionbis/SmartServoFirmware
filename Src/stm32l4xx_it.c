@@ -264,19 +264,19 @@ void EXTI4_IRQHandler(void)
 	break;
 
 	case(0xA0):
-					controller +=40;//set kp
+					controller =77;//set kp
 		break;
 	case(0xA1):
-					controller +=50;//set ki
+					controller +=78;//set ki
 		break;
 	case(0xA2):
-					controller +=60;//set kd
+					controller +=79;//set kd
 		break;
 	case(0xA3):
-					controller +=70;//set g
+					controller +=80;//set g
 		break;
 	case(0xA4):
-					controller +=80;//set c
+					controller +=81;//set c
 		break;
 
 	}
