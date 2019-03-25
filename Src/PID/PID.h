@@ -133,7 +133,7 @@ public:
 	void setSetPoint(float sp);
 
 
-	void setCorr(float C);
+	void setCor(float C);
 	void setGrav(float G);
 
 	/**
@@ -168,6 +168,8 @@ public:
 	float getDParam();
 	float getVel();
 	float getSetpoint();
+	float getGrav();
+	float getCor();
 
 private:
 

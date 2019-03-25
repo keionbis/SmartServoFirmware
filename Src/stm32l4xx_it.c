@@ -61,8 +61,9 @@ extern TIM_HandleTypeDef htim7;
 extern SPI_HandleTypeDef hspi3;
 extern uint16_t _TXData[5];
 uint16_t _RxData[5] = {1, 1, 1, 1,1};
-extern int controller;
+extern int controller, prevController;
 extern int EndSetPoint;
+extern float Pkp, Pki, Pkd, Vkp , Vki , Vkd, Tkp, Tki , Tkd, Out , Pkg, Vkg, Tkg, Pkc, Vkc, Tkc;
 
 /**
  * @brief This function handles Non maskable interrupt.
@@ -232,52 +233,95 @@ void EXTI4_IRQHandler(void)
 
 	switch(_RxData[1]){
 	case(0x00):
-				controller = 7;
+			prevController = controller;
+			controller = 7;
 	break;
 
 	case(0x91):
-        		controller = 0;
-	Setpoint = (float)_RxData[2];
+        	controller = 0;
+			Setpoint = (int16_t)_RxData[2];
 
 	break;
 	case(0x92):
-				controller = 1;
-	if(_RxData[3])
-		Setpoint = _RxData[2]*-1;
-	else
-		Setpoint = _RxData[2];
+			controller = 1;
+			Setpoint = (int16_t)_RxData[2];
 
 	break;
 	case(0x93):
-				controller = 2;
-	Setpoint = _RxData[2];
+			controller = 2;
+			Setpoint = (int16_t)_RxData[2];
 
 	break;
 	case(0x47):
-				 controller +=10;
+				Pkp = _RxData[2]/1000;
+				Pki = _RxData[3]/1000;
+				Pkd = _RxData[4]/1000;
+
 	break;
 	case(0x48):
-				controller +=20;
-	break;
+				Vkp = _RxData[2]/1000;
+				Vki = _RxData[3]/1000;
+				Vkd = _RxData[4]/1000;	break;
 	case(0x49):
-				controller +=30;
-	break;
+				Tkp = _RxData[2]/1000;
+				Tki = _RxData[3]/1000;
+				Tkd = _RxData[4]/1000;	break;
 
 	case(0xA0):
-					controller =77;//set kp
-		break;
+					if(_RxData[3] == 1){
+						Pkp = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 2){
+						Vkp = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 3){
+						Tkp = (float)_RxData[2]/100;
+					}
+	break;
 	case(0xA1):
-					controller +=78;//set ki
-		break;
+					if(_RxData[3] == 1){
+						Pki = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 2){
+						Vki = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 3){
+						Tki = (float)_RxData[2]/100;
+					}
+	break;
 	case(0xA2):
-					controller +=79;//set kd
-		break;
+					if(_RxData[3] == 1){
+						Pkd = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 2){
+						Vkd = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 3){
+						Tkd = (float)_RxData[2]/100;
+					}
+	break;
 	case(0xA3):
-					controller +=80;//set g
-		break;
+					if(_RxData[3] == 1){
+						Pkg = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 2){
+						Vkg = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 3){
+						Tkg = (float)_RxData[2]/100;
+					}
+	break;
 	case(0xA4):
-					controller +=81;//set c
-		break;
+					if(_RxData[3] == 1){
+						Pkc = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 2){
+						Vkc = (float)_RxData[2]/100;
+					}
+					else if(_RxData[3] == 3){
+						Tkc = (float)_RxData[2]/100;
+					}
+	break;
 
 	}
 

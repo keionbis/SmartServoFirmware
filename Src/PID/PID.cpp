@@ -213,7 +213,7 @@ void PID::setGrav(float G) {
 	gParam_ = G;
 
 }
-void PID::setCorr(float C) {
+void PID::setCor(float C) {
 
 	cParam_ = C;
 
@@ -346,4 +346,10 @@ float PID::getVel(){
 }
 float PID::getSetpoint(){
 	return setPoint_;
+}
+float PID::getGrav(){
+	return gParam_;
+}
+float PID::getCor(){
+	return cParam_;
 }

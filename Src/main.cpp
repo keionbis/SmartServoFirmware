@@ -6,6 +6,8 @@
 #include "PID/PID.h"
 #include "eeprom.h"
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 
 #ifdef __cplusplus
 extern "C"
@@ -41,9 +43,9 @@ PID Position(50, 0.5, 1, 0.00000000038146973);
 PID Velocity(0.05, 0, 0, 0.00000000038146973);
 PID Torque(0.05, 0, 0, 0.00000000038146973);
 MA702 encoder;
-
+uint16_t vel[2] = {0};
 //PID constants setup
-float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0;
+float Pkp = 8, Pki = 0, Pkd = 0, Vkp = 1, Vki = 0, Vkd = 0, Tkp = 1, Tki = 0, Tkd = 0, Out = 0, Pkg = 0, Vkg = 0, Tkg = 0, Pkc = 0, Vkc = 0, Tkc = 0;
 
 //general Variable definitions
 extern uint16_t _RxData[5];
@@ -51,7 +53,7 @@ uint16_t _TXData[5] = {1,2,3,4,5};
 uint16_t  devID = 3;
 uint32_t Data = 0;
 float Output, Setpoint, PkpSetpoint = 50;
-int controller = 0, EndSetPoint;
+int controller = 0, prevController = 0, EndSetPoint;
 
 //Function definitions
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
@@ -510,6 +512,25 @@ void runControllers(){
 	if(encoder.totalAngle() == (uint16_t)Setpoint){
 		return;
 	}
+
+	if(controller ==7){
+		_TXData[2] = encoder.totalAngle();
+		//get velocity from pid controller
+		if(prevController == 0)
+			float Velocity = Position.getVel();
+		else if(prevController == 0)
+			float Velocity = Velocity.getVel();
+
+
+		//convert velocity float to 2 16 bit ints
+		memcpy(vel, &Velocity, sizeof(vel));
+
+		//Assign velocity to response buffer
+		_TXData[3] = vel[0];
+		_TXData[4] = vel[1];
+		controller = 0;
+
+	}
 	if(controller ==0 || controller == 1 || controller == 2){
 		if(controller == 0){
 			Position.setProcessValue(encoder.totalAngle());
@@ -519,29 +540,72 @@ void runControllers(){
 			_TXData[0] = devID;
 			_TXData[1] = 0x91;
 			_TXData[2] = encoder.totalAngle();
-			if(_TXData[2]<0){
-				_TXData[3] = 1 ;
-			}
-			else{
-				_TXData[3] = 0 ;
 
+			//get velocity from pid controller
+			float Vel = Position.getVel();
+
+			//convert velocity float to 2 16 bit ints
+			memcpy(vel, &Vel, sizeof(vel));
+
+			//Assign velocity to response buffer
+			_TXData[3] = vel[0];
+			_TXData[4] = vel[1];
+
+			if(Position.getPParam()!=Pkp||Position.getIParam()!=Pki||Position.getDParam()!=Pkd){
+				Position.setTunings(Pkp, Pki, Pkd);
+			}
+			if(Position.getGrav()!=Pkg){
+				Position.setGrav(Pkg);
+			}
+			if(Position.getCor()!=Pkg){
+				Position.setCor(Pkc);
 			}
 
-			//				_TXData[4] = (uint16_t)(Out*1000);
 
 		}
 		if(controller == 1){
 			Velocity.setSetPoint(Setpoint);
 			Velocity.setProcessValue(encoder.getVelocity());
 			Out = Position.compute();
-			_TXData[2] = encoder.getVelocity();
+			_TXData[0] = devID;
+			_TXData[1] = 0x92;
+			float Vel = Position.getVel();
+
+			//convert velocity float to 2 16 bit ints
+			memcpy(vel, &Vel, sizeof(vel));
+
+			//Assign velocity to response buffer
+			_TXData[2] = vel[0];
+			_TXData[3] = vel[1];
+
+			if(Velocity.getPParam()!=Vkp||Velocity.getIParam()!=Vki||Velocity.getDParam()!=Vkd){
+				Velocity.setTunings(Vkp, Vki, Vkd);
+			}
+			if(Velocity.getGrav()!=Vkg){
+				Velocity.setGrav(Vkg);
+			}
+			if(Velocity.getCor()!=Vkg){
+				Velocity.setCor(Vkc);
+			}
 
 		}
 		if(controller == 2){
 			Torque.setSetPoint(Setpoint);
 			Torque.setProcessValue(HAL_ADC_GetValue(&hadc1));
 			Out = Position.compute();
+			_TXData[0] = devID;
+			_TXData[1] = 0x93;
 			_TXData[2] = (uint16_t)(Out*1000);
+
+			if(Torque.getPParam()!=Tkp||Torque.getIParam()!=Tki||Torque.getDParam()!=Tkd){
+				Torque.setTunings(Tkp, Tki, Tkd);
+			}
+			if(Torque.getGrav()!=Tkg){
+				Torque.setGrav(Tkg);
+			}
+			if(Torque.getCor()!=Tkg){
+				Torque.setCor(Tkc);
+			}
 
 		}
 
@@ -557,116 +621,6 @@ void runControllers(){
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4,0);
 		}
-	}
-	if(controller ==7){
-		_TXData[2] = encoder.totalAngle();
-		_TXData[3] = HAL_ADC_GetValue(&hadc1);
-	}
-
-	if(controller ==77){
-		if(_RxData[3] == 1){
-			Pkp = (float)(_RxData[2]/100);
-			Position.setTunings(Pkd, Pki, Pkd);
-		}
-		else if(_RxData[3] == 2){
-			Vkp = (float)_RxData[2]/100;
-			Position.setTunings(Vkd, Vki, Vkd);
-		}
-		else if(_RxData[3] == 3){
-			Tkp = (float)_RxData[2]/100;
-			Position.setTunings(Tkd, Tki, Tkd);
-		}
-
-
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller = 0;
-	}
-
-	if(controller == 78){
-		if(_RxData[3] == 1){
-			Pki = (float)_RxData[2]/100;
-			Position.setTunings(Pkd, Pki, Pkd);
-		}
-		else if(_RxData[3] == 2){
-			Vki = (float)_RxData[2]/100;
-			Position.setTunings(Vkd, Vki, Vkd);
-		}
-		else if(_RxData[3] == 3){
-			Tki = (float)_RxData[2]/100;
-			Position.setTunings(Tkd, Tki, Tkd);
-		}
-
-
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=50;
-	}
-	if(controller == 79){
-		if(_RxData[3] == 1){
-			Pkd = (float)_RxData[2]/100;
-			Position.setTunings(Pkd, Pki, Pkd);
-		}
-		else if(_RxData[3] == 2){
-			Vkd = (float)_RxData[2]/100;
-			Position.setTunings(Vkd, Vki, Vkd);
-		}
-		else if(_RxData[3] == 3){
-			Tkd = (float)_RxData[2]/100;
-			Position.setTunings(Tkd, Tki, Tkd);
-		}
-
-
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=60;
-	}
-	if(controller == 80){
-		if(_RxData[3] == 1){
-
-			Position.setGrav((float)((int16_t)(_RxData[2])/100));
-		}
-		else if(_RxData[3] == 2){
-			Position.setGrav((float)((int16_t)(_RxData[2])/100));
-		}
-		else if(_RxData[3] == 3){
-			Position.setGrav((float)((int16_t)(_RxData[2])/100));
-		}
-
-
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=70;
-	}
-	if(controller == 81){
-		if(_RxData[3] == 1){
-			Position.setCorr((float)(((int16_t)_RxData[2])/100));
-		}
-		else if(_RxData[3] == 2){
-			Position.setCorr((float)(((int16_t)_RxData[2])/100));
-		}
-		else if(_RxData[3] == 3){
-			Position.setCorr((float)(((int16_t)_RxData[2])/100));
-		}
-
-		_TXData[0] = _RxData[0];
-		_TXData[1] = _RxData[1];
-		_TXData[2] = _RxData[2];
-		_TXData[3] = _RxData[3];
-		_TXData[4] = _RxData[4];
-		controller-=80;
 	}
 
 
