@@ -54,7 +54,7 @@ uint16_t  devID = 3;
 uint32_t Data = 0;
 float Output, Setpoint, PkpSetpoint = 50;
 int controller = 0, prevController = 0, EndSetPoint;
-
+float Vel = 0;
 //Function definitions
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void SystemClock_Config(void);
@@ -517,13 +517,13 @@ void runControllers(){
 		_TXData[2] = encoder.totalAngle();
 		//get velocity from pid controller
 		if(prevController == 0)
-			float Velocity = Position.getVel();
-		else if(prevController == 0)
-			float Velocity = Velocity.getVel();
+			Vel = Position.getVel();
+		else if(prevController == 1)
+			Vel = Velocity.getVel();
 
 
 		//convert velocity float to 2 16 bit ints
-		memcpy(vel, &Velocity, sizeof(vel));
+		memcpy(vel, &Vel, sizeof(vel));
 
 		//Assign velocity to response buffer
 		_TXData[3] = vel[0];
@@ -542,11 +542,12 @@ void runControllers(){
 			_TXData[2] = encoder.totalAngle();
 
 			//get velocity from pid controller
-			float Vel = Position.getVel();
+			Vel = Position.getVel();
 
 			//convert velocity float to 2 16 bit ints
 			memcpy(vel, &Vel, sizeof(vel));
 
+			//memcpy(&Vel, vel, sizeof(Vel));
 			//Assign velocity to response buffer
 			_TXData[3] = vel[0];
 			_TXData[4] = vel[1];
@@ -569,7 +570,7 @@ void runControllers(){
 			Out = Position.compute();
 			_TXData[0] = devID;
 			_TXData[1] = 0x92;
-			float Vel = Position.getVel();
+			 Vel = Position.getVel();
 
 			//convert velocity float to 2 16 bit ints
 			memcpy(vel, &Vel, sizeof(vel));

@@ -192,7 +192,9 @@ private:
 	float setPoint_;
 	//The thing we measure.
 	float processVariable_;
-	float prevProcessVariable_;
+	volatile float prevProcessVariable_;
+	volatile float prevScaledProcessVariable_;
+
 	//The output that affects the process variable.
 	float controllerOutput_;
 	float prevControllerOutput_;
@@ -217,7 +219,7 @@ private:
 	//Controller output as a real world value.
 	volatile float realOutput_;
 	float PrevPos = 0;
-	float Velocity = 0;
+	volatile float Velocity;
 
 };
 

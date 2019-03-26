@@ -261,7 +261,7 @@ float PID::compute() {
 	}
 
 	//Compute the current slope of the input signal.
-	float dMeas = (scaledPV - prevProcessVariable_) / tSample_;
+	float dMeas = (scaledPV - prevScaledProcessVariable_) / tSample_;
 
 	float scaledBias = 0.0;
 
@@ -286,7 +286,7 @@ float PID::compute() {
 
 	prevControllerOutput_ = controllerOutput_;
 	//Remember the input for the derivative calculation next time.
-	prevProcessVariable_  = scaledPV;
+	prevScaledProcessVariable_  = scaledPV;
 
 	//Scale the output from percent span back out to a real world number.
 
